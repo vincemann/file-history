@@ -1,36 +1,40 @@
-# from pwn import *
+#!/usr/local/env python3
 import os
 import sys
+from lib import ezlib as ezlib
+
 from file_read_backwards import FileReadBackwards
 
+gui = None
+
 if len(sys.argv) > 1:
-    last_files_amount = int(sys.argv[1])
+    gui = sys.argv[1]
+    if not (gui == "gui" or gui == "terminal"):
+        print("usage: python3 show-last-files.py gui|terminal [last-files-amount ; [recent_dirs_amount]] ")
+        exit(1)
+if len(sys.argv) > 2:
+    last_files_amount = int(sys.argv[2])
 else:
     last_files_amount = 10
-if len(sys.argv) > 2:
-    recent_dirs_amount = int(sys.argv[2])
+if len(sys.argv) > 3:
+    recent_dirs_amount = int(sys.argv[3])
 else:
     recent_dirs_amount = 20
+
+
 
 cmd_history_file = os.getenv("HISTFILE")
 dir_history_file = os.getenv("DIR_HISTORY")
 
+if gui is None:
+    gui = os.getenv("EZ_BASH_GUI")
+    if gui is None:
+        print("env var EZ_BASH_GUI not set and no gui arg supplied, defaulting to terminal selection box")
+        gui = "terminal"
+
 if cmd_history_file is None:
     print("cant find cmd history file. Please set env var HISTFILE")
     exit(1)
-
-
-def find_recent_dirs(n):
-    recent_dirs = []
-    if dir_history_file:
-        with open(dir_history_file, 'r') as file:
-            while len(recent_dirs) < n :
-                recent_dir = file.readline()
-                if recent_dir == "":
-                    break
-                recent_dirs.append(recent_dir.rstrip())
-            file.close()
-    return recent_dirs
 
 
 def check_and_add_file(files, already_seen, file):
@@ -72,7 +76,6 @@ def extract_files_from_command(cmd, recent_dirs, recent_files):
     return files
 
 
-
 def find_recent_files_in_commands(n, recent_dirs):
     recent_files = []
     with FileReadBackwards(cmd_history_file) as file:
@@ -86,6 +89,7 @@ def find_recent_files_in_commands(n, recent_dirs):
     return recent_files
 
 
+
 recent_dirs = []
 if dir_history_file:
     recent_dirs = find_recent_dirs(recent_dirs_amount)
@@ -97,4 +101,14 @@ last_files = find_recent_files_in_commands(last_files_amount, recent_dirs)
 
 print("last files: ")
 print(last_files)
+
+if gui == "gui":
+    selected_file = ezlib.show_gui_selection(last_files)
+else:
+    selected_file = ezlib.show_terminal_selection(last_files)
+
+print("selected_file: %s" % selected_file)
+ezlib.put_to_clipboard(selected_file)
+
+
 
