@@ -92,7 +92,7 @@ def find_recent_files_in_commands(n, recent_dirs):
 
 recent_dirs = []
 if dir_history_file:
-    recent_dirs = find_recent_dirs(recent_dirs_amount)
+    recent_dirs = find_recent_dirs(dir_history_file,recent_dirs_amount)
 
 print("recent dirs")
 print(recent_dirs)
