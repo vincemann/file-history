@@ -40,5 +40,5 @@ load_libs
 
 
 echo "creating symlink in path (/usr/local/bin)"
-chmod a+x "./find-last-files.py"
-ln -s "/usr/local/bin/file-history" "$(pwd)/find-last-files.py"
+chmod a+x "./show-last-files.py"
+ln -sf "$(pwd)/show-last-files.py" "/usr/local/bin/show-last-files"
