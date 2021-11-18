@@ -27,9 +27,6 @@ else
 	print_usage
 fi
 
-
-load_libs
-
 load_libs()
 {
 	echo "loading dependencies"
@@ -37,6 +34,10 @@ load_libs()
 	mv ./ez-bash/lib .
 	rm -rf ./ez-bash
 }
+
+
+load_libs
+
 
 echo "creating symlink in path (/usr/local/bin)"
 chmod a+x "./find-last-files.py"
