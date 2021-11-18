@@ -1,4 +1,4 @@
-#!/usr/local/env python3
+#!/usr/bin/env python3
 import os
 import sys
 from lib import ezlib as ezlib
