@@ -94,7 +94,7 @@ def sigint_handler(signal, frame):
 
 recent_dirs = []
 if dir_history_file:
-    recent_dirs = find_recent_dirs(dir_history_file,recent_dirs_amount)
+    recent_dirs = ezlib.find_recent_dirs(dir_history_file,recent_dirs_amount)
 
 print("recent dirs")
 print(recent_dirs)

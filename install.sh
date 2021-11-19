@@ -27,8 +27,10 @@ else
 	print_usage
 fi
 
+sudo apt install -y python3-pip
 sudo apt install -y python3-tk
-sudo python3 -m pip install -r ./requirements.txt
+# sudo python3 -m pip install -r ./requirements.txt
+sudo pip3 install -r ./requirements.txt
 
 load_libs()
 {
