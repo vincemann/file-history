@@ -6,6 +6,7 @@ from lib import ezlib as ezlib
 from file_read_backwards import FileReadBackwards
 
 gui = None
+ezlib.init_logfile("cd-history.log")
 
 if len(sys.argv) > 1:
     gui = sys.argv[1]
@@ -88,7 +89,9 @@ def find_recent_files_in_commands(n, recent_dirs):
         file.close()
     return recent_files
 
-
+import signal
+def sigint_handler(signal, frame):
+    sys.exit(0)
 
 recent_dirs = []
 if dir_history_file:
