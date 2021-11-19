@@ -6,7 +6,6 @@ from lib import ezlib as ezlib
 from file_read_backwards import FileReadBackwards
 
 gui = None
-ezlib.init_logfile("cd-history.log")
 
 if len(sys.argv) > 1:
     gui = sys.argv[1]
