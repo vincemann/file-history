@@ -1,3 +1,2 @@
 file-read-backwards==2.0.0
-pkg-resources==0.0.0
 pyperclip==1.8.2
