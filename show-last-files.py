@@ -74,7 +74,7 @@ def extract_files_from_command(cmd, recent_dirs, recent_files):
     cmd_parts = cmd.replace(";"," ").split(" ")
     for potential_file in cmd_parts:
         try:
-            if file.isspace():
+            if potential_file.isspace():
                 print("skipping part bc only whitespace")
                 continue
             file = potential_file.rstrip()
