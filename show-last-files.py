@@ -74,7 +74,8 @@ def extract_files_from_command(cmd, recent_dirs, recent_files):
     cmd_parts = cmd.replace(";"," ").split(" ")
     for potential_file in cmd_parts:
         try:
-            if len(potential_file) == 0:
+            if file.isspace():
+                print("skipping part bc only whitespace")
                 continue
             file = potential_file.rstrip()
             if file.startswith("/"):
@@ -89,8 +90,10 @@ def extract_files_from_command(cmd, recent_dirs, recent_files):
             elif potential_file.startswith("./"):
                 file = potential_file[2:]
             # potential relative file, always not starting with /
-
             print("potential relative file suffix: %s" % file)
+            if file.isspace():
+                print("skipping part bc only whitespace")
+                continue
             print("#####################################################")
             for recent_dir in recent_dirs:
                 print("checking recent dir: %s" % recent_dir)
