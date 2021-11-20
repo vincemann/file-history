@@ -35,7 +35,7 @@ dir_history_file = os.getenv("DIR_HISTORY")
 if gui is None:
     gui = os.getenv("EZ_BASH_GUI")
     if gui is None:
-        print("env var EZ_BASH_GUI not set and no gui arg supplied, defaulting to terminal selection box")
+        print("env var EZ_BASH_GUI not set and no gui arg supplied, defaulting to terminal selection")
         gui = "terminal"
 
 if cmd_history_file is None:
@@ -45,36 +45,59 @@ if cmd_history_file is None:
 
 def check_and_add_file(files, already_seen, file):
     if os.path.isfile(file):
-        if file not in files and file not in already_seen:
-            print("found file: %s" % file)
-            files.append(file)
-            return True
+        print("file exists on system")
+        if file in files:
+            print("already locally seen")
+            return False
+        if file in already_seen:
+             print("already gloabally seen")
+            return False
+        print("found file: %s" % file)
+        files.append(file)
+        return True
     return False
 
 
+checked_cmds = []
+
 def extract_files_from_command(cmd, recent_dirs, recent_files):
     print("checking cmd for files: %s" % cmd)
-    cmd_parts = cmd.split(" ")
+    global checked_cmds
+    # dont parse same cmd twice
+    if cmd in checked_cmds:
+        return []
+    else:
+        checked_cmds.append(cmd)
+
+
     files = []
+    cmd_parts = cmd.replace(";"," ").split(" ")
     for potential_file in cmd_parts:
         try:
             if len(potential_file) == 0:
                 continue
             file = potential_file.rstrip()
             if file.startswith("/"):
-                # print("checking potential file: %s" % file)
+                print("checking potential abs file: %s" % file)
                 check_and_add_file(files, recent_files, file)
+                continue
+            elif potential_file.startswith("~"):
+                print("checking potential abs file: %s" % file)
+                file = os.getenv("HOME")+potential_file[1:]
+                check_and_add_file(files, recent_files, file)
+                continue
             elif potential_file.startswith("./"):
-                file = potential_file[1:]
-            # potential relative file
+                file = potential_file[2:]
+            # potential relative file, always not starting with /
 
-            # print("#####################################################")
+            print("#####################################################")
             for recent_dir in recent_dirs:
+
                 file = recent_dir+"/"+file
-                # print("checking potential file: %s" % file)
+                print("checking potential relative file: %s" % file)
                 if check_and_add_file(files, recent_files, file):
                     break
-            # print("#####################################################")
+            print("#####################################################")
         except ValueError as e:
             print("error occured, skipping")
             print(e)
@@ -83,6 +106,8 @@ def extract_files_from_command(cmd, recent_dirs, recent_files):
 
 
 def find_recent_files_in_commands(n, recent_dirs):
+    global checked_cmds
+    checked_cmds = []
     recent_files = []
     with FileReadBackwards(cmd_history_file) as file:
         while len(recent_files) < n:
