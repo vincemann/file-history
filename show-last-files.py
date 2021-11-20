@@ -142,6 +142,8 @@ else:
     selected_file = ezlib.show_terminal_selection(last_files)
 
 print("selected_file: %s" % selected_file)
+if selected_file is None:
+    exit(0)
 ezlib.put_to_clipboard(selected_file)
 
 
