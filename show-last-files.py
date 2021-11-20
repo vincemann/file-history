@@ -78,6 +78,7 @@ def extract_files_from_command(cmd, recent_dirs, recent_files):
                 print("skipping part bc only whitespace")
                 continue
             file = potential_file.rstrip()
+            file = file.replace("../","")
             if file.startswith("/"):
                 print("checking potential abs file: %s" % file)
                 check_and_add_file(files, recent_files, file)
