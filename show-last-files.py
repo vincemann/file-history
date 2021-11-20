@@ -97,9 +97,9 @@ def extract_files_from_command(cmd, recent_dirs, recent_files):
             print("#####################################################")
             for recent_dir in recent_dirs:
                 print("checking recent dir: %s" % recent_dir)
-                file = recent_dir+"/"+file
-                print("checking potential relative file: %s" % file)
-                if check_and_add_file(files, recent_files, file):
+                rel_file = recent_dir+"/"+file
+                print("checking potential relative file: %s" % rel_file)
+                if check_and_add_file(files, recent_files, rel_file):
                     break
             print("#####################################################")
         except ValueError as e:
