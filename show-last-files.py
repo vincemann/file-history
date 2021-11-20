@@ -50,7 +50,7 @@ def check_and_add_file(files, already_seen, file):
             print("already locally seen")
             return False
         if file in already_seen:
-             print("already gloabally seen")
+            print("already gloabally seen")
             return False
         print("found file: %s" % file)
         files.append(file)
