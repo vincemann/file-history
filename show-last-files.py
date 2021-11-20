@@ -22,6 +22,12 @@ else:
     recent_dirs_amount = 20
 
 
+import signal
+def sigint_handler(signal, frame):
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, sigint_handler)
+
 
 cmd_history_file = os.getenv("HISTFILE")
 dir_history_file = os.getenv("DIR_HISTORY")
@@ -88,9 +94,6 @@ def find_recent_files_in_commands(n, recent_dirs):
         file.close()
     return recent_files
 
-import signal
-def sigint_handler(signal, frame):
-    sys.exit(0)
 
 recent_dirs = []
 if dir_history_file:
