@@ -1,11 +1,11 @@
 #!/bin/bash
 
 GUI=$1
-LOCAL=$2
+# LOCAL=$2
 
 print_usage()
 {
-	echo "(file history) usage ./install gui|terminal local|system"
+	echo "(file history) usage ./install gui|terminal"
 	exit 1
 }
 
@@ -19,13 +19,13 @@ else
 fi
 
 
-if [[ $LOCAL = "local" ]];then
-	echo "installing locally"
-elif [[ $LOCAL = "system" ]];then
-	echo "installing system wide"
-else
-	print_usage
-fi
+# if [[ $LOCAL = "local" ]];then
+# 	echo "installing locally"
+# elif [[ $LOCAL = "system" ]];then
+# 	echo "installing system wide"
+# else
+# 	print_usage
+# fi
 
 sudo apt install -y python3-pip
 sudo apt install -y python3-tk

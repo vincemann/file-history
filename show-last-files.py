@@ -60,6 +60,7 @@ def check_and_add_file(files, already_seen, file):
 
 checked_cmds = []
 
+# does not find "files like this" or "files\ like\ this"
 def extract_files_from_command(cmd, recent_dirs, recent_files):
     print("checking cmd for files: %s" % cmd)
     global checked_cmds
