@@ -211,6 +211,7 @@ def find_recent_filtered_files_in_commands(file_name_filter,max_searched_cmds, r
 
 
 recent_dirs = []
+print("dir_history_file: %s" % dir_history_file)
 if dir_history_file:
     recent_dirs = ezlib.find_recent_dirs(dir_history_file,recent_dirs_amount)
 
