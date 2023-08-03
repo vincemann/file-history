@@ -6,20 +6,50 @@ from lib import ezlib as ezlib
 from file_read_backwards import FileReadBackwards
 
 gui = None
+file_name_filter=None
+filter_max_searched_cmds = 500
+last_files_amount = 10
+recent_dirs_amount = 20
+
+
+# find last files amount and recent dirs amount if present in cli args
+def parse_last_files_amount(index):
+    global last_files_amount;
+    if len(sys.argv) > index:
+        last_files_amount = int(sys.argv[index])
+
+def parse_recent_dirs_amount(index):
+    global recent_dirs_amount
+    if len(sys.argv) > index:
+        recent_dirs_amount = int(sys.argv[index])
+
+def parse_max_searched_cmds(index):
+    global filter_max_searched_cmds
+    if len(sys.argv) > index:
+        filter_max_searched_cmds = int(sys.argv[index])
+
 
 if len(sys.argv) > 1:
     gui = sys.argv[1]
     if not (gui == "gui" or gui == "terminal"):
-        print("usage: python3 show-last-files.py gui|terminal [last-files-amount ; [recent_dirs_amount]] ")
+        print("usage: python3 show-last-files.py gui|terminal { [filter=<grepInput> [max_searched_cmds] [recent_dirs_amount] | [last-files-amount] [recent_dirs_amount] } ")
         exit(1)
 if len(sys.argv) > 2:
-    last_files_amount = int(sys.argv[2])
-else:
-    last_files_amount = 10
-if len(sys.argv) > 3:
-    recent_dirs_amount = int(sys.argv[3])
-else:
-    recent_dirs_amount = 20
+    arg2 = sys.argv[2]
+    if arg2.startswith("filter="):
+        print("using filter")
+        file_name_filter=arg2[len("filter="):]
+        print("using file name filter: %s" % file_name_filter)
+        parse_max_searched_cmds(3)
+        parse_recent_dirs_amount(4)
+    else:
+        print("not using filter")
+        parse_last_files_amount(2)
+        parse_recent_dirs_amount(3)
+
+
+def use_filter():
+    return file_name_filter is not None
 
 
 import signal
@@ -43,7 +73,7 @@ if cmd_history_file is None:
     exit(1)
 
 
-def check_and_add_file(files, already_seen, file):
+def check_and_add_file(files, already_seen, file, file_name_filter):
     if os.path.isfile(file):
         print("file exists on system")
         if file in files:
@@ -53,15 +83,23 @@ def check_and_add_file(files, already_seen, file):
             print("already gloabally seen")
             return False
         print("found file: %s" % file)
-        files.append(file)
-        return True
+        match = True
+        if file_name_filter is not None:
+            if file_name_filter not in file:
+                print("not using file, because filtered out")
+                match = False
+        if match:
+            files.append(file)
+            return True
+        else:
+            return False
     return False
 
 
 checked_cmds = []
 
 # does not find "files like this" or "files\ like\ this"
-def extract_files_from_command(cmd, recent_dirs, recent_files):
+def extract_files_from_command(cmd, recent_dirs, recent_files, file_name_filter=None):
     print("checking cmd for files: %s" % cmd)
     global checked_cmds
     # dont parse same cmd twice
@@ -82,12 +120,12 @@ def extract_files_from_command(cmd, recent_dirs, recent_files):
             file = file.replace("../","")
             if file.startswith("/"):
                 print("checking potential abs file: %s" % file)
-                check_and_add_file(files, recent_files, file)
+                check_and_add_file(files, recent_files, file, file_name_filter)
                 continue
             elif potential_file.startswith("~"):
                 print("checking potential abs file: %s" % file)
                 file = os.getenv("HOME")+potential_file[1:]
-                check_and_add_file(files, recent_files, file)
+                check_and_add_file(files, recent_files, file, file_name_filter)
                 continue
             elif potential_file.startswith("./"):
                 file = potential_file[2:]
@@ -101,7 +139,7 @@ def extract_files_from_command(cmd, recent_dirs, recent_files):
                 print("checking recent dir: %s" % recent_dir)
                 rel_file = recent_dir+"/"+file
                 print("checking potential relative file: %s" % rel_file)
-                if check_and_add_file(files, recent_files, rel_file):
+                if check_and_add_file(files, recent_files, rel_file, file_name_filter):
                     break
             print("#####################################################")
         except ValueError as e:
@@ -125,6 +163,22 @@ def find_recent_files_in_commands(n, recent_dirs):
         file.close()
     return recent_files
 
+# finds all files matching file filter like 'grep <my_filter>'
+# of n recent dirs
+def find_recent_filtered_files_in_commands(file_name_filter,max_searched_cmds, recent_dirs):
+    global checked_cmds
+    checked_cmds = []
+    recent_files = []
+    with FileReadBackwards(cmd_history_file) as file:
+        while len(checked_cmds) < max_searched_cmds:
+            recent_command = file.readline()
+            if recent_command == "":
+                break
+            files = extract_files_from_command(recent_command, recent_dirs, recent_files, file_name_filter=file_name_filter)
+            recent_files.extend(files)
+        file.close()
+    return recent_files
+
 
 recent_dirs = []
 if dir_history_file:
@@ -133,7 +187,10 @@ if dir_history_file:
 print("recent dirs")
 print(recent_dirs)
 
-last_files = find_recent_files_in_commands(last_files_amount, recent_dirs)
+if use_filter():
+    last_files = find_recent_filtered_files_in_commands(file_name_filter, filter_max_searched_cmds, recent_dirs)
+else:
+    last_files = find_recent_files_in_commands(last_files_amount, recent_dirs)
 
 print("last files: ")
 print(last_files)
