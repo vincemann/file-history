@@ -4,17 +4,28 @@ import sys
 from lib import ezlib as ezlib
 
 from file_read_backwards import FileReadBackwards
+import tkinter as tk
+from tkinter import simpledialog
 
 gui = None
-file_name_filter=None
+file_name_filter = None
 filter_max_searched_cmds = 500
 last_files_amount = 10
 recent_dirs_amount = 20
 
 
+def parse_view_mode():
+    global gui
+    if len(sys.argv) > 1:
+        gui = sys.argv[1]
+        if not (gui == "gui" or gui == "terminal"):
+            # popup will only work with gui option
+            print("usage: python3 show-last-files.py gui|terminal { [filter={ <file_name_filter> | popup } [max_searched_cmds] [recent_dirs_amount] | [last-files-amount] [recent_dirs_amount] } ")
+            exit(1)
+
 # find last files amount and recent dirs amount if present in cli args
 def parse_last_files_amount(index):
-    global last_files_amount;
+    global last_files_amount
     if len(sys.argv) > index:
         last_files_amount = int(sys.argv[index])
 
@@ -29,16 +40,35 @@ def parse_max_searched_cmds(index):
         filter_max_searched_cmds = int(sys.argv[index])
 
 
-if len(sys.argv) > 1:
-    gui = sys.argv[1]
-    if not (gui == "gui" or gui == "terminal"):
-        print("usage: python3 show-last-files.py gui|terminal { [filter=<grepInput> [max_searched_cmds] [recent_dirs_amount] | [last-files-amount] [recent_dirs_amount] } ")
+def show_popup():
+    # Create the main application window
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window, leaving only the popup dialog
+
+    # Show a popup dialog to input the value
+    user_input = simpledialog.askstring("Input", "Enter filter:")
+
+    root.destroy()
+    # Check if the user provided a value
+    if user_input is None:
+        print("Error no user input")
         exit(1)
+    else:
+        return user_input
+
+
+parse_view_mode()
 if len(sys.argv) > 2:
     arg2 = sys.argv[2]
     if arg2.startswith("filter="):
-        print("using filter")
+        print("using filename filter")
         file_name_filter=arg2[len("filter="):]
+        if file_name_filter == "popup":
+            if gui is False:
+                print("popup only works in combination with gui")
+                exit(1)
+            # ask for filter by displaying popup
+            file_name_filter = show_popup()
         print("using file name filter: %s" % file_name_filter)
         parse_max_searched_cmds(3)
         parse_recent_dirs_amount(4)
