@@ -20,7 +20,7 @@ def parse_view_mode():
         gui = sys.argv[1]
         if not (gui == "gui" or gui == "terminal"):
             # popup will only work with gui option
-            print("usage: python3 show-last-files.py gui|terminal { [filter={ <file_name_filter> | popup } [max_searched_cmds] [recent_dirs_amount] | [last-files-amount] [recent_dirs_amount] } ")
+            ezlib.eprint("usage: python3 show-last-files.py gui|terminal { [filter={ <file_name_filter> | popup } [max_searched_cmds] [recent_dirs_amount] | [last-files-amount] [recent_dirs_amount] } ")
             exit(1)
 
 # find last files amount and recent dirs amount if present in cli args
@@ -51,7 +51,7 @@ def show_popup():
     root.destroy()
     # Check if the user provided a value
     if user_input is None:
-        print("Error no user input")
+        ezlib.eprint("Error no user input")
         exit(1)
     else:
         return user_input
@@ -61,19 +61,19 @@ parse_view_mode()
 if len(sys.argv) > 2:
     arg2 = sys.argv[2]
     if arg2.startswith("filter="):
-        print("using filename filter")
+        ezlib.eprint("using filename filter")
         file_name_filter=arg2[len("filter="):]
         if file_name_filter == "popup":
             if gui is False:
-                print("popup only works in combination with gui")
+                ezlib.eprint("popup only works in combination with gui")
                 exit(1)
             # ask for filter by displaying popup
             file_name_filter = show_popup()
-        print("using file name filter: %s" % file_name_filter)
+        ezlib.eprint("using file name filter: %s" % file_name_filter)
         parse_max_searched_cmds(3)
         parse_recent_dirs_amount(4)
     else:
-        print("not using filter")
+        ezlib.eprint("not using filter")
         parse_last_files_amount(2)
         parse_recent_dirs_amount(3)
 
@@ -95,28 +95,28 @@ dir_history_file = os.getenv("DIR_HISTORY")
 if gui is None:
     gui = os.getenv("EZ_BASH_GUI")
     if gui is None:
-        print("env var EZ_BASH_GUI not set and no gui arg supplied, defaulting to terminal selection")
+        ezlib.eprint("env var EZ_BASH_GUI not set and no gui arg supplied, defaulting to terminal selection")
         gui = "terminal"
 
 if cmd_history_file is None:
-    print("cant find cmd history file. Please set env var HISTFILE")
+    ezlib.eprint("cant find cmd history file. Please set env var HISTFILE")
     exit(1)
 
 
 def check_and_add_file(files, already_seen, file, file_name_filter):
     if os.path.isfile(file):
-        print("file exists on system")
+        ezlib.eprint("file exists on system")
         if file in files:
-            print("already locally seen")
+            ezlib.eprint("already locally seen")
             return False
         if file in already_seen:
-            print("already gloabally seen")
+            ezlib.eprint("already gloabally seen")
             return False
-        print("found file: %s" % file)
+        ezlib.eprint("found file: %s" % file)
         match = True
         if file_name_filter is not None:
             if file_name_filter not in file:
-                print("not using file, because filtered out")
+                ezlib.eprint("not using file, because filtered out")
                 match = False
         if match:
             files.append(file)
@@ -130,7 +130,7 @@ checked_cmds = []
 
 # does not find "files like this" or "files\ like\ this"
 def extract_files_from_command(cmd, recent_dirs, recent_files, file_name_filter=None):
-    print("checking cmd for files: %s" % cmd)
+    ezlib.eprint("checking cmd for files: %s" % cmd)
     global checked_cmds
     # dont parse same cmd twice
     if cmd in checked_cmds:
@@ -144,37 +144,37 @@ def extract_files_from_command(cmd, recent_dirs, recent_files, file_name_filter=
     for potential_file in cmd_parts:
         try:
             if potential_file.isspace() or potential_file.strip() == "":
-                print("skipping part bc only whitespace")
+                ezlib.eprint("skipping part bc only whitespace")
                 continue
             file = potential_file.rstrip()
             file = file.replace("../","")
             if file.startswith("/"):
-                print("checking potential abs file: %s" % file)
+                ezlib.eprint("checking potential abs file: %s" % file)
                 check_and_add_file(files, recent_files, file, file_name_filter)
                 continue
             elif potential_file.startswith("~"):
-                print("checking potential abs file: %s" % file)
+                ezlib.eprint("checking potential abs file: %s" % file)
                 file = os.getenv("HOME")+potential_file[1:]
                 check_and_add_file(files, recent_files, file, file_name_filter)
                 continue
             elif potential_file.startswith("./"):
                 file = potential_file[2:]
             # potential relative file, always not starting with /
-            print("potential relative file suffix: %s" % file)
+            ezlib.eprint("potential relative file suffix: %s" % file)
             if file.isspace() or file.strip() == "":
-                print("skipping part bc only whitespace")
+                ezlib.eprint("skipping part bc only whitespace")
                 continue
-            print("#####################################################")
+            ezlib.eprint("#####################################################")
             for recent_dir in recent_dirs:
-                print("checking recent dir: %s" % recent_dir)
+                ezlib.eprint("checking recent dir: %s" % recent_dir)
                 rel_file = recent_dir+"/"+file
-                print("checking potential relative file: %s" % rel_file)
+                ezlib.eprint("checking potential relative file: %s" % rel_file)
                 if check_and_add_file(files, recent_files, rel_file, file_name_filter):
                     break
-            print("#####################################################")
+            ezlib.eprint("#####################################################")
         except ValueError as e:
-            print("error occured, skipping")
-            print(e)
+            ezlib.eprint("error occured, skipping")
+            ezlib.eprint(e)
             continue
     return files
 
@@ -211,30 +211,31 @@ def find_recent_filtered_files_in_commands(file_name_filter,max_searched_cmds, r
 
 
 recent_dirs = []
-print("dir_history_file: %s" % dir_history_file)
+ezlib.eprint("dir_history_file: %s" % dir_history_file)
 if dir_history_file:
     recent_dirs = ezlib.find_recent_dirs(dir_history_file,recent_dirs_amount)
 
-print("recent dirs")
-print(recent_dirs)
+ezlib.eprint("recent dirs")
+ezlib.eprint(recent_dirs)
 
 if use_filter():
     last_files = find_recent_filtered_files_in_commands(file_name_filter, filter_max_searched_cmds, recent_dirs)
 else:
     last_files = find_recent_files_in_commands(last_files_amount, recent_dirs)
 
-print("last files: ")
-print(last_files)
+ezlib.eprint("last files: ")
+ezlib.eprint(last_files)
 
 if gui == "gui":
     selected_file = ezlib.show_gui_selection(last_files)
 else:
     selected_file = ezlib.show_terminal_selection(last_files)
 
-print("selected_file: %s" % selected_file)
+ezlib.eprint("selected_file: %s" % selected_file)
 if selected_file is None:
     exit(0)
-ezlib.put_to_clipboard(selected_file)
+# ezlib.put_to_clipboard(selected_file)
+sys.stdout.write(selected_file)
 
 
 
