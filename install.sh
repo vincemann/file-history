@@ -1,53 +1,118 @@
 #!/bin/bash
 
-GUI=$1
-# LOCAL=$2
+interface=$1
+scope=$2
 
-print_usage()
-{
-	echo "(file history) usage ./install gui|terminal"
-	exit 1
+
+print_usage() {
+    echo "usage: $0 gui|terminal local|system"
+    exit 1
 }
 
 
-if [[ $GUI = "gui" ]]; then
-	echo "installing gui version"
-elif [[ $GUI = "terminal" ]]; then
-	echo "installing terminal version"
+
+# Parse arguments
+case $interface in
+    gui)
+        echo "installing interface version"
+        ;;
+    terminal)
+        echo "installing terminal version"
+        ;;
+    *)
+        print_usage
+        ;;
+esac
+local_installation=false
+root=false
+case $scope in
+    local)
+        echo "installing locally"
+        local_installation=true
+        ;;
+    system)
+        root=true
+        echo "installing system wide"
+        ;;
+    *)
+        print_usage
+        ;;
+esac
+
+
+
+# edit files as root?
+user="normal"
+if $root; then
+    user="root"
+    echo "editing files as root"
 else
-	print_usage
+    echo "editing files as $USER"
 fi
 
 
-# if [[ $LOCAL = "local" ]];then
-# 	echo "installing locally"
-# elif [[ $LOCAL = "system" ]];then
-# 	echo "installing system wide"
-# else
-# 	print_usage
-# fi
 
-sudo apt install -y python3-pip
-sudo apt install -y python3-tk
-sudo python3 -m pip install --upgrade pip
-# sudo python3 -m pip install -r ./requirements.txt
-# sudo pip3 install -r ./requirements.txt
-# https://stackoverflow.com/questions/49324802/pip-always-fails-ssl-verification
-sudo python3 -m pip install --trusted-host files.pythonhosted.org --trusted-host pypi.org --trusted-host pypi.python.org -r requirements.txt
-
-load_libs()
-{
-	echo "loading dependencies"
-	git clone https://github.com/vincemann/ez-bash.git
-	rm -rf ./lib
-	mv ./ez-bash/lib .
-	rm -rf ./ez-bash
-}
+# install deps
+./scripts/install/install-python.sh
+./scripts/install/setup-venv.sh
 
 
-load_libs
+
+# which bashrc file to edit?
+bashrc="/etc/bash.bashrc"
+bashrc_template="./templates/system-bashrc-template"
+if $local_installation; then
+    bashrc="$HOME/.bashrc"
+    bashrc_template="./templates/local-bashrc-template"
+fi
+echo "Editing file: $bashrc"
+echo "Using bashrc template file: $bashrc_template"
 
 
-echo "creating symlink in path (/usr/local/bin)"
-chmod a+x "./show-last-files.py"
-sudo ln -sf "$(pwd)/show-last-files.py" "/usr/local/bin/show-last-files"
+# where to store file_history file
+hist_file="/opt/.file_history"
+if $local_installation; then
+    hist_file="$HOME/.file_history"
+fi
+echo "file_history file location: $hist_file"
+
+
+# create hist file if not there yet
+if $local_installation; then
+    [ ! -f "$hist_file" ] && touch "$hist_file"
+else
+    [ ! -f "$hist_file" ] && sudo touch "$hist_file"
+    sudo chmod a+rw "$hist_file"
+fi
+
+
+# backup
+./scripts/install/backup.sh "$scope" "$bashrc"
+
+
+
+# add paragraph
+start_pattern="# FILE HISTORY START"
+end_pattern="# FILE HISTORY END"
+start_found=$(cat "$bashrc" | grep --count "$start_pattern")
+end_found=$(cat "$bashrc" | grep --count "$end_pattern")
+template_file=$(mktemp)
+cat "$bashrc_template" > "$template_file"
+bash ./scripts/install/replace_or_add_line.sh "$template_file" "export FILE_HIST_FILE=" "export FILE_HIST_FILE=$hist_file" "$user"
+bash ./scripts/install/replace_or_add_line.sh "$template_file" "export FILE_HIST_MODE=" "export FILE_HIST_MODE=$interface" "$user"
+echo "paragraph to add:"
+cat "$template_file"
+echo "adding bashrc paragraph"
+bash ./scripts/install/replace_or_add_paragraph.sh "$bashrc" "$start_pattern" "$end_pattern" "$template_file" "$user"
+echo "done updating bashrc"
+
+
+
+# create symlinks if needed
+./scripts/install/create-symlink.sh "./file-history" $scope
+
+
+# done
+echo "installed"
+echo "current installations: $installations"
+echo "restart terminal for changes to take effect"

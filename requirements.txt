@@ -1,2 +1,2 @@
-file-read-backwards==2.0.0
+file-read-backwards==3.1.0
 pyperclip==1.8.2

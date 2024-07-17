@@ -1,0 +1,96 @@
+
+# FILE HISTORY START    by vincemann @ https://github.com/vincemann/file-history ____________________________________________________________________________________________
+
+# usage (short):
+# files         -> display recent files, let user select file - this file will be opened in editor
+# files foo     -> display recent files whos abs path contains 'foo', let user select file - this file will be opened in editor
+# cfiles        -> same as 'files', but selected file ends up in clipboard
+# cfiles foo    -> same as 'files foo', but selected file ends up in clipboard
+
+# for more complex usecases call 'files -h' to see the usage guide
+# note that 'files' is ist a convenience alias for the original executable 'file-history'
+
+
+# --- VARIABLES TO PLAY AROUND WITH ---
+# gui or terminal mode
+export FILE_HIST_MODE=
+# where is your file history stored (path)
+export FILE_HIST_FILE=
+# search until found this many files
+export FILE_HIST_RESULTS=25
+
+# export FILE_HIST_EDITOR=vim
+
+# -------------------------------------
+
+# command containing these will be ignored, to avoid cluttering
+# init commands like [ -x /usr/bin/clear_console ] otherwise cause these to be added
+IGNORED_COMMANDS=(
+    "/usr/bin/dircolors"
+    "/usr/bin/clear_console"
+    "/usr/share/bash-completion/bash_completion"
+)
+
+is_ignored_command() {
+    local cmd="$1"
+    for ignored_cmd in "${IGNORED_COMMANDS[@]}"; do
+        if [[ "$cmd" == *"$ignored_cmd"* ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+
+# track files (is executed on each bash command you execute)
+track_files() {
+    if [[ $- == *i* ]]; then
+        local cmd="${BASH_COMMAND}"
+        local curr_dir="${PWD}"
+
+        local log_file="/tmp/system-$(whoami)"
+
+        echo "cmd: $cmd" >> "$log_file"
+
+        if is_ignored_command "$cmd"; then
+            echo "ignore" >> "$log_file"
+            return
+        fi
+
+        # escape doulbe quotes
+        cmd="$(echo "$cmd" | sed 's/"/\\"/g')"
+        curr_dir="$(echo "$curr_dir" | sed 's/"/\\"/g')"
+
+        (bash -c "file-history track \"$curr_dir\" \"$cmd\"> /dev/null 2>&1 && file-history clean > /dev/null 2>&1" > /dev/null 2>&1 & disown)
+    fi
+}
+
+
+
+# make sure tracking of files is initialized after shell is ready (boost startup time significally)
+initialize_file_tracking() {
+    trap 'track_files' DEBUG
+    PROMPT_COMMAND="${PROMPT_COMMAND/initialize_file_tracking;}"
+}
+PROMPT_COMMAND="${PROMPT_COMMAND}initialize_file_tracking;"
+
+# alias definitions
+alias files=files_function
+alias cfiles='files_function --action=clip'
+
+files_function() {
+    local rest=()
+    local filter_found=false
+
+    for arg in "$@"; do
+        if ! $filter_found && [[ $arg != --* ]]; then
+            rest+=("--filter=$arg")
+            filter_found=true
+        else
+            rest+=("$arg")
+        fi
+    done
+    file-history "${rest[@]}"
+}
+
+# FILE HISTORY END ____________________________________________________________________________________________
