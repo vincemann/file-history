@@ -187,4 +187,3 @@ fabric.properties
 .env
 test/integration/core
 test/files/output-log.txt
-scripts/cd-history
