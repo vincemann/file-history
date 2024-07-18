@@ -7,24 +7,24 @@ works in gui and terminal environments and can be installed system wide or only 
 
 ## usage:  
 - show recent files, lets you select one and open selected in editor  
-- ```files```
+ ```files```
 - show recent files, whos path contains foo and lets you select one and open selected in editor  
-- ```files foo```
+ ```files foo```
 -  see this for more complex scenrios  
-- ```files -h```
+  ```files -h```
    
 ***env vars with examples***   
 Note that some of these are set by the install script in your bashrc  
 - which editor to use  
-- ```FILE_HIST_EDITOR=vim```  
-- how many files to display  
-- ```FILE_HIST_RESULTS=25```
-- how many files to scan at most
-- ```FILE_HIST_MAX_SCANNED=-1```
-- where to store the history
-- ```FILE_HIST_FILE=/home/user/.file_history```
-- gui or terminal mode?
-- ```FILE_HIST_MODE=gui```
+ ```FILE_HIST_EDITOR=vim```  
+- how many files to display   
+ ```FILE_HIST_RESULTS=25```
+- how many files to scan at most  
+ ```FILE_HIST_MAX_SCANNED=-1```
+- where to store the history  
+ ```FILE_HIST_FILE=/home/user/.file_history```
+- gui or terminal mode?  
+ ```FILE_HIST_MODE=gui```
 
 ## installation  
 ```git clone https://github.com/vincemann/file-history```  
